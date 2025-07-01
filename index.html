@@ -5,26 +5,55 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DNRBT</title>
   <style>
-    body {
+    * {
       margin: 0;
       padding: 0;
-      background: #000;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: #000;
       color: #fff;
-      font-family: sans-serif;
+      font-family: Arial, sans-serif;
+      height: 100vh;
       display: flex;
       flex-direction: column;
-      align-items: center;
       justify-content: center;
-      height: 100vh;
+      align-items: center;
       text-align: center;
     }
 
     h1 {
-      font-size: 64px;
-      letter-spacing: 4px;
-      margin-bottom: 40px;
+      font-size: 72px;
+      letter-spacing: 8px;
+      margin-bottom: 60px;
+    }
+
+    .links {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
     }
 
     .links a {
       color: #fff;
-      text-de
+      text-decoration: none;
+      font-size: 20px;
+      transition: opacity 0.3s ease;
+    }
+
+    .links a:hover {
+      opacity: 0.5;
+    }
+  </style>
+</head>
+<body>
+  <h1>DNRBT</h1>
+  <div class="links">
+    <a href="https://www.instagram.com/daniorobot_/" target="_blank">Instagram</a>
+    <a href="https://www.tiktok.com/@daniorobot2" target="_blank">TikTok #2</a>
+    <a href="https://www.tiktok.com/@daniorobot" target="_blank">TikTok #1</a>
+    <a href="https://www.youtube.com/@daniorobot" target="_blank">YouTube</a>
+  </div>
+</body>
+</html>
