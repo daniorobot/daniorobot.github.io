@@ -8,7 +8,6 @@
     body {
       background-color: #000;
       color: #fff;
-      font-family: "Comic Sans MS", "Comic Sans", cursive, sans-serif;
       height: 100vh;
       display: flex;
       flex-direction: column;
@@ -24,6 +23,7 @@
       letter-spacing: 6px;
       margin-bottom: 60px;
       font-weight: 600;
+      font-family: var(--random-font, Arial, sans-serif);
     }
 
     .links {
@@ -33,13 +33,14 @@
       width: 100%;
       max-width: 320px;
       align-items: center;
+      font-family: var(--random-font, Arial, sans-serif);
+      font-weight: 600;
+      font-size: 22px;
     }
 
     .links a {
       color: #fff;
       text-decoration: none;
-      font-size: 22px;
-      font-weight: 600;
       transition: opacity 0.3s;
       user-select: none;
       display: inline-block;
@@ -61,12 +62,21 @@
   </div>
 
   <script>
+    const fonts = [
+      '"Comic Sans MS", cursive',
+      '"Courier New", monospace',
+      'Georgia, serif',
+      'Impact, sans-serif',
+      'Papyrus, fantasy'
+    ];
+
+    const randomFont = fonts[Math.floor(Math.random() * fonts.length)];
+    document.body.style.setProperty('--random-font', randomFont);
+
     const links = document.querySelectorAll('.links a');
 
     links.forEach(link => {
-      // losowy obrót od -5 do 5 stopni
       const rotate = (Math.random() * 10 - 5).toFixed(2);
-      // losowe przesunięcie X od -15 do 15 px
       const translateX = (Math.random() * 30 - 15).toFixed(2);
 
       link.style.transform = `translateX(${translateX}px) rotate(${rotate}deg)`;
