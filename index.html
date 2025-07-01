@@ -2,31 +2,26 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>DNRBT</title>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
     body {
       background-color: #000;
       color: #fff;
-      font-family: 'IBM Plex Sans', sans-serif;
+      font-family: "Comic Sans MS", "Comic Sans", cursive, sans-serif;
       height: 100vh;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       text-align: center;
+      padding: 20px;
+      margin: 0;
     }
 
     h1 {
-      font-size: 72px;
-      letter-spacing: 8px;
+      font-size: 48px;
+      letter-spacing: 6px;
       margin-bottom: 60px;
       font-weight: 600;
     }
@@ -35,17 +30,23 @@
       display: flex;
       flex-direction: column;
       gap: 20px;
+      width: 100%;
+      max-width: 320px;
+      align-items: center;
     }
 
     .links a {
       color: #fff;
       text-decoration: none;
-      font-size: 20px;
-      font-weight: 400;
-      transition: opacity 0.3s ease;
+      font-size: 22px;
+      font-weight: 600;
+      transition: opacity 0.3s;
+      user-select: none;
+      display: inline-block;
     }
 
-    .links a:hover {
+    .links a:hover,
+    .links a:active {
       opacity: 0.5;
     }
   </style>
@@ -53,10 +54,23 @@
 <body>
   <h1>DNRBT</h1>
   <div class="links">
-    <a href="https://www.instagram.com/daniorobot_/" target="_blank">Instagram</a>
-    <a href="https://www.tiktok.com/@daniorobot2" target="_blank">TikTok #2</a>
-    <a href="https://www.tiktok.com/@daniorobot" target="_blank">TikTok #1</a>
-    <a href="https://www.youtube.com/@daniorobot" target="_blank">YouTube</a>
+    <a href="https://www.instagram.com/daniorobot_/" target="_blank" rel="noopener noreferrer">Instagram</a>
+    <a href="https://www.tiktok.com/@daniorobot2" target="_blank" rel="noopener noreferrer">TikTok #2</a>
+    <a href="https://www.tiktok.com/@daniorobot" target="_blank" rel="noopener noreferrer">TikTok #1</a>
+    <a href="https://www.youtube.com/@daniorobot" target="_blank" rel="noopener noreferrer">YouTube</a>
   </div>
+
+  <script>
+    const links = document.querySelectorAll('.links a');
+
+    links.forEach(link => {
+      // losowy obrót od -5 do 5 stopni
+      const rotate = (Math.random() * 10 - 5).toFixed(2);
+      // losowe przesunięcie X od -15 do 15 px
+      const translateX = (Math.random() * 30 - 15).toFixed(2);
+
+      link.style.transform = `translateX(${translateX}px) rotate(${rotate}deg)`;
+    });
+  </script>
 </body>
 </html>
