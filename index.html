@@ -11,8 +11,8 @@
       height: 100vh;
       max-height: 100vh;
       overflow: hidden;
-      touch-action: none; /* blokuje przewijanie dotykiem */
-      -webkit-overflow-scrolling: auto; /* wyłącza momentum scroll na iOS */
+      touch-action: none;
+      -webkit-overflow-scrolling: auto;
     }
 
     body {
@@ -26,6 +26,7 @@
       padding: 20px;
       font-family: var(--random-font, Arial, sans-serif);
       box-sizing: border-box;
+      transform: translateY(-10%);
     }
 
     h1 {
@@ -33,6 +34,8 @@
       letter-spacing: 6px;
       margin-bottom: 60px;
       font-weight: 600;
+      cursor: pointer;
+      user-select: none;
     }
 
     .links {
@@ -58,10 +61,23 @@
     .links a:active {
       opacity: 0.5;
     }
+
+    @keyframes shake {
+      0% { transform: translateX(0); }
+      20% { transform: translateX(-5px); }
+      40% { transform: translateX(5px); }
+      60% { transform: translateX(-5px); }
+      80% { transform: translateX(5px); }
+      100% { transform: translateX(0); }
+    }
+
+    .shake {
+      animation: shake 0.5s;
+    }
   </style>
 </head>
 <body>
-  <h1>DNRBT</h1>
+  <h1 id="dnrbt">DNRBT</h1>
   <div class="links">
     <a href="https://www.instagram.com/daniorobot_/" target="_blank" rel="noopener noreferrer">Instagram</a>
     <a href="https://www.tiktok.com/@daniorobot2" target="_blank" rel="noopener noreferrer">TikTok #2</a>
@@ -88,6 +104,16 @@
       const translateX = (Math.random() * 30 - 15).toFixed(2);
 
       link.style.transform = `translateX(${translateX}px) rotate(${rotate}deg)`;
+    });
+
+    const dnrbt = document.getElementById('dnrbt');
+
+    dnrbt.addEventListener('click', () => {
+      dnrbt.classList.add('shake');
+      if (navigator.vibrate) {
+        navigator.vibrate(200);
+      }
+      setTimeout(() => dnrbt.classList.remove('shake'), 500);
     });
   </script>
 </body>
