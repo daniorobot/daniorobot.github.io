@@ -1,80 +1,58 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>DNRBT</title>
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100vh;
-      max-height: 100vh;
-      overflow: hidden;
-      touch-action: none;
-      -webkit-overflow-scrolling: auto;
-    }
-
-    body {
-      background-color: #000;
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
-      padding: 20px;
-      font-family: var(--random-font, Arial, sans-serif);
-      box-sizing: border-box;
-      transform: translateY(-10%);
-    }
-
-    h1 {
-      font-size: 48px;
-      letter-spacing: 6px;
-      margin-bottom: 60px;
-      font-weight: 600;
-      cursor: pointer;
-      user-select: none;
-    }
-
-    .links {
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-      width: 100%;
-      max-width: 320px;
-      align-items: center;
-      font-weight: 600;
-      font-size: 22px;
-    }
-
-    .links a {
-      color: #fff;
-      text-decoration: none;
-      transition: opacity 0.3s;
-      user-select: none;
-      display: inline-block;
-    }
-
-    .links a:hover,
-    .links a:active {
-      opacity: 0.5;
-    }
-
-    @keyframes shake {
-      0% { transform: translateX(0); }
-      20% { transform: translateX(-5px); }
-      40% { transform: translateX(5px); }
-      60% { transform: translateX(-5px); }
-      80% { transform: translateX(5px); }
-      100% { transform: translateX(0); }
-    }
-
-    .shake {
-      animation: shake 0.5s;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>DNRBT</title>
+<style>
+  html, body {
+    margin: 0; padding: 0;
+    height: 100vh; max-height: 100vh;
+    overflow: hidden;
+    touch-action: none;
+    -webkit-overflow-scrolling: auto;
+    background-color: #000;
+    color: #fff;
+    font-family: var(--random-font, Arial, sans-serif);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 20px;
+    box-sizing: border-box;
+    transform: translateY(-10%);
+  }
+  h1 {
+    font-size: 48px;
+    letter-spacing: 6px;
+    margin-bottom: 60px;
+    font-weight: 600;
+    cursor: pointer;
+    user-select: none;
+  }
+  .links {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+    max-width: 320px;
+    align-items: center;
+    font-weight: 600;
+    font-size: 22px;
+  }
+  .links a {
+    color: #fff;
+    text-decoration: none;
+    transition: opacity 0.3s;
+    user-select: none;
+    display: inline-block;
+  }
+  .links a:hover,
+  .links a:active {
+    opacity: 0.5;
+  }
+</style>
 </head>
 <body>
   <h1 id="dnrbt">DNRBT</h1>
@@ -85,36 +63,71 @@
     <a href="https://www.youtube.com/@daniorobot" target="_blank" rel="noopener noreferrer">YouTube</a>
   </div>
 
-  <script>
-    const fonts = [
-      '"Comic Sans MS", cursive',
-      '"Courier New", monospace',
-      'Georgia, serif',
-      'Impact, sans-serif',
-      'Papyrus, fantasy'
-    ];
+<script>
+  const fonts = [
+    '"Comic Sans MS", cursive',
+    '"Courier New", monospace',
+    'Georgia, serif',
+    'Impact, sans-serif',
+    'Papyrus, fantasy'
+  ];
+  const randomFont = fonts[Math.floor(Math.random() * fonts.length)];
+  document.body.style.setProperty('--random-font', randomFont);
 
-    const randomFont = fonts[Math.floor(Math.random() * fonts.length)];
-    document.body.style.setProperty('--random-font', randomFont);
+  const links = document.querySelectorAll('.links a');
+  links.forEach(link => {
+    const rotate = (Math.random() * 10 - 5).toFixed(2);
+    const translateX = (Math.random() * 30 - 15).toFixed(2);
+    link.style.transform = `translateX(${translateX}px) rotate(${rotate}deg)`;
+  });
 
-    const links = document.querySelectorAll('.links a');
+  const dnrbt = document.getElementById('dnrbt');
 
-    links.forEach(link => {
-      const rotate = (Math.random() * 10 - 5).toFixed(2);
-      const translateX = (Math.random() * 30 - 15).toFixed(2);
+  // funkcja tworzy animację shake z parametrami
+  function createShakeAnimation(name, intensity, shakes, duration) {
+    const styleSheet = document.styleSheets[0];
+    const keyframes =
+      `@keyframes ${name} {
+        0% { transform: translateX(0); }
+        ` + 
+        Array.from({length: shakes}).map((_, i) => {
+          const percent = ((i + 1) / shakes) * 100;
+          const direction = (i % 2 === 0 ? intensity : -intensity);
+          return `${percent}% { transform: translateX(${direction}px); }`
+        }).join('') +
+      `
+        100% { transform: translateX(0); }
+      }`;
 
-      link.style.transform = `translateX(${translateX}px) rotate(${rotate}deg)`;
-    });
+    // usuń starą animację o tej samej nazwie jeśli jest
+    for(let i=styleSheet.cssRules.length-1; i>=0; i--) {
+      const rule = styleSheet.cssRules[i];
+      if(rule.name === name) styleSheet.deleteRule(i);
+    }
 
-    const dnrbt = document.getElementById('dnrbt');
+    styleSheet.insertRule(keyframes, styleSheet.cssRules.length);
+  }
 
-    dnrbt.addEventListener('click', () => {
-      dnrbt.classList.add('shake');
-      if (navigator.vibrate) {
-        navigator.vibrate(200);
-      }
-      setTimeout(() => dnrbt.classList.remove('shake'), 500);
-    });
-  </script>
+  dnrbt.addEventListener('click', () => {
+    // losowe parametry:
+    const intensity = Math.floor(Math.random() * 9) + 2; // 2-10 px przesuw
+    const shakes = Math.floor(Math.random() * 6) + 3; // 3-8 drgań
+    const duration = (Math.random() * 0.5 + 0.2).toFixed(2); // 0.2 - 0.7 sek
+
+    const animName = 'shakeRandom';
+
+    createShakeAnimation(animName, intensity, shakes, duration);
+
+    dnrbt.style.animation = `${animName} ${duration}s`;
+
+    if (navigator.vibrate) {
+      navigator.vibrate(duration * 1000);
+    }
+
+    dnrbt.addEventListener('animationend', () => {
+      dnrbt.style.animation = '';
+    }, { once: true });
+  });
+</script>
 </body>
 </html>
