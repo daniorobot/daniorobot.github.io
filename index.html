@@ -4,40 +4,55 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
   <title>DNRBT</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter&family=IBM+Plex+Sans&family=Rubik&display=swap" rel="stylesheet" />
+
   <style>
     html, body {
-      margin: 0;
-      padding: 0;
-      height: 100vh;
-      max-height: 100vh;
-      overflow: hidden;
-      touch-action: none;
-      -webkit-overflow-scrolling: auto;
-    }
-
-    body {
-      background-color: #000;
+      margin: 0; padding: 0; height: 100vh; max-height: 100vh; overflow: hidden; touch-action: none;
+      background: #000;
       color: #fff;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
-      padding: 20px;
-      font-family: var(--random-font, Arial, sans-serif);
+      font-family: var(--random-font, 'Inter', sans-serif);
       box-sizing: border-box;
-      transform: translateY(-10%);
-    }
-
-    h1 {
-      font-size: 48px;
-      letter-spacing: 6px;
-      margin-bottom: 60px;
-      font-weight: 600;
-      cursor: pointer;
       user-select: none;
     }
-
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      text-align: center;
+      padding: 20px;
+      overflow: hidden;
+      position: relative;
+      height: 100vh;
+    }
+    #warning {
+      position: fixed;
+      top: -50px;
+      width: 100%;
+      text-align: center;
+      color: #888;
+      font-weight: 600;
+      pointer-events: none;
+      opacity: 0;
+      user-select: none;
+      z-index: 1000;
+      transition: transform 1s ease, opacity 1s ease, font-size 0.5s ease;
+      will-change: transform, opacity, font-size;
+    }
+    h1 {
+      font-size: 60px;
+      letter-spacing: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      transform-origin: center;
+      white-space: nowrap;
+      user-select: none;
+      margin-bottom: 60px;
+      transition: none;
+      display: inline-block;
+    }
     .links {
       display: flex;
       flex-direction: column;
@@ -47,16 +62,15 @@
       align-items: center;
       font-weight: 600;
       font-size: 22px;
+      user-select: none;
     }
-
     .links a {
       color: #fff;
       text-decoration: none;
-      user-select: none;
       display: inline-block;
-      transition: transform 0.4s ease; /* animacja przesunięcia i rotacji */
+      transition: transform 0.8s ease;
+      user-select: none;
     }
-
     .links a:hover,
     .links a:active {
       opacity: 0.5;
@@ -64,6 +78,8 @@
   </style>
 </head>
 <body>
+  <div id="warning">*NIE KLIKAJ DNRBT*</div>
+
   <h1 id="dnrbt">DNRBT</h1>
   <div class="links">
     <a href="https://www.instagram.com/daniorobot_/" target="_blank" rel="noopener noreferrer">Instagram</a>
@@ -74,75 +90,153 @@
 
   <script>
     const fonts = [
-      '"Comic Sans MS", cursive',
-      '"Courier New", monospace',
-      'Georgia, serif',
-      'Impact, sans-serif',
-      'Papyrus, fantasy'
+      "'Inter', sans-serif",
+      "'IBM Plex Sans', sans-serif",
+      "'Rubik', sans-serif"
     ];
     const randomFont = fonts[Math.floor(Math.random() * fonts.length)];
     document.body.style.setProperty('--random-font', randomFont);
 
     const links = document.querySelectorAll('.links a');
+    const warning = document.getElementById('warning');
 
-    // Funkcja do losowego ustawienia transform na linkach
-    function randomizeLinks() {
+    function randomizeLinksBase() {
       links.forEach(link => {
-        const rotate = (Math.random() * 20 - 10).toFixed(2); // od -10 do 10 stopni
-        const translateX = (Math.random() * 20 - 10).toFixed(2); // od -10 do 10 px
-        link.style.transform = `translateX(${translateX}px) rotate(${rotate}deg)`;
+        const rotate = (Math.random() * 20 - 10).toFixed(2);
+        const translateX = (Math.random() * 20 - 10).toFixed(2);
+        const scaleX = (Math.random() * 0.4 + 0.8).toFixed(2);
+        const scaleY = (Math.random() * 0.4 + 0.8).toFixed(2);
+        link.style.transition = 'transform 0.8s ease';
+        link.style.transform = `translateX(${translateX}px) rotate(${rotate}deg) scaleX(${scaleX}) scaleY(${scaleY})`;
       });
     }
 
-    // Ustawienie początkowe
-    randomizeLinks();
+    let currentX = 0;
+    let currentY = 0;
+    let currentRotate = 0;
+    let shakeInterval = null;
+    let mainPos = { x: 0, y: 0 };
+    let warningActive = false;
+
+    window.onload = () => {
+      currentX = 0;
+      currentY = 0;
+      currentRotate = 0;
+      mainPos.x = 0;
+      mainPos.y = 0;
+      const dnrbt = document.getElementById('dnrbt');
+      dnrbt.style.transform = `translate(0px, 0px) rotate(0deg)`;
+
+      links.forEach(link => {
+        link.style.transition = 'none';
+        link.style.transform = 'none';
+      });
+
+      const fontSize = 12 + Math.random() * 4;
+      warning.style.fontSize = `${fontSize}px`;
+
+      setTimeout(() => {
+        warning.style.opacity = '1';
+        warningActive = true;
+        const randomY = 100 + Math.random() * 80;
+        warning.style.transform = `translateY(${randomY}px)`;
+      }, 500);
+
+      setTimeout(() => {
+        const angle = Math.random() * 2 * Math.PI;
+        const distance = 2000;
+        const translateX = Math.cos(angle) * distance;
+        const translateY = Math.sin(angle) * distance;
+
+        warning.style.transition = 'transform 1.5s ease, opacity 1.5s ease, font-size 1.5s ease';
+        warning.style.opacity = '0';
+        warning.style.transform = `translate(${translateX}px, ${translateY}px)`;
+        warningActive = false;
+      }, 4000);
+
+      setTimeout(() => {
+        warning.style.display = 'none';
+      }, 6000);
+    };
 
     const dnrbt = document.getElementById('dnrbt');
 
-    function createShakeAnimation(name, intensity, shakes, duration) {
-      const styleSheet = document.styleSheets[0];
-      const keyframes =
-        `@keyframes ${name} {
-          0% { transform: translateX(0); }
-          ` + 
-          Array.from({length: shakes}).map((_, i) => {
-            const percent = ((i + 1) / shakes) * 100;
-            const direction = (i % 2 === 0 ? intensity : -intensity);
-            return `${percent}% { transform: translateX(${direction}px); }`
-          }).join('') +
-        `
-          100% { transform: translateX(0); }
-        }`;
-
-      for(let i=styleSheet.cssRules.length-1; i>=0; i--) {
-        const rule = styleSheet.cssRules[i];
-        if(rule.name === name) styleSheet.deleteRule(i);
-      }
-
-      styleSheet.insertRule(keyframes, styleSheet.cssRules.length);
-    }
-
     dnrbt.addEventListener('click', () => {
-      const intensity = Math.floor(Math.random() * 9) + 2; // 2-10 px
-      const shakes = Math.floor(Math.random() * 6) + 3; // 3-8 drgań
-      const duration = (Math.random() * 0.5 + 0.2).toFixed(2); // 0.2-0.7 s
+      if (shakeInterval) return;
 
-      const animName = 'shakeRandom';
+      const dnrbtRect = dnrbt.getBoundingClientRect();
+      const intensityX = Math.random() * 25 + 10;
+      const intensityY = Math.random() * 25 + 10;
+      const intensityRotate = Math.random() * 15 + 5;
 
-      createShakeAnimation(animName, intensity, shakes, duration);
-
-      dnrbt.style.animation = `${animName} ${duration}s`;
-
-      randomizeLinks(); // losowe ustawienie linków podczas animacji
-
-      const vibrateTime = Math.round(duration * 1000 * (intensity / 10));
       if (navigator.vibrate) {
-        navigator.vibrate(vibrateTime);
+        const vibrationDuration = Math.min(500, Math.max(intensityX, intensityY, intensityRotate) * 20);
+        navigator.vibrate(vibrationDuration);
       }
 
-      dnrbt.addEventListener('animationend', () => {
-        dnrbt.style.animation = '';
-      }, { once: true });
+      if (warningActive) {
+        let warningInterval = setInterval(() => {
+          const scaleX = 1 + (Math.random() * 5);
+          const scaleY = 1 + (Math.random() * 5);
+          const rotate = (Math.random() * 360 - 180);
+          const translateX = (Math.random() * window.innerWidth - window.innerWidth/2);
+          const translateY = (Math.random() * window.innerHeight - window.innerHeight/2);
+          warning.style.transition = 'transform 0.2s ease';
+          warning.style.transform = `translate(${translateX}px, ${translateY}px) scaleX(${scaleX}) scaleY(${scaleY}) rotate(${rotate}deg)`;
+        }, 100);
+
+        setTimeout(() => {
+          clearInterval(warningInterval);
+          warning.style.transition = 'transform 1s ease';
+          const randomY = 100 + Math.random() * 80;
+          warning.style.transform = `translateY(${randomY}px)`;
+        }, 3000);
+      }
+
+      const duration = 800;
+      const startTime = Date.now();
+
+      dnrbt.style.transition = 'none';
+
+      const moveDirX = (Math.random() * 2 - 1) * 1;
+      const moveDirY = (Math.random() * 2 - 1) * 1;
+      const rotateDir = (Math.random() * 2 - 1) * 0.3;
+
+      shakeInterval = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        if (elapsed >= duration) {
+          clearInterval(shakeInterval);
+          shakeInterval = null;
+          dnrbt.style.transition = 'none';
+          dnrbt.style.transform = `translate(${currentX}px, ${currentY}px) rotate(${currentRotate}deg)`;
+          randomizeLinksBase();
+          return;
+        }
+
+        const offsetX = (Math.random() * 2 - 1) * intensityX * 0.3;
+        const offsetY = (Math.random() * 2 - 1) * intensityY * 0.3;
+        const offsetRotate = (Math.random() * 2 - 1) * intensityRotate * 0.3;
+
+        currentX += moveDirX;
+        currentY += moveDirY;
+        currentRotate += rotateDir;
+
+        currentX = Math.min(Math.max(currentX, -dnrbtRect.left), window.innerWidth - dnrbtRect.right);
+        currentY = Math.min(Math.max(currentY, -dnrbtRect.top), window.innerHeight - dnrbtRect.bottom);
+
+        dnrbt.style.transform = `translate(${currentX + offsetX}px, ${currentY + offsetY}px) rotate(${currentRotate + offsetRotate}deg)`;
+
+        links.forEach(link => {
+          const baseTransform = link.style.transform;
+          const rotateL = (Math.random() * 20 - 10) * 0.2;
+          const translateXL = (Math.random() * 20 - 10) * 0.2;
+          const scaleXL = 1 + (Math.random() * 0.1 - 0.05);
+          const scaleYL = 1 + (Math.random() * 0.1 - 0.05);
+
+          link.style.transition = 'none';
+          link.style.transform = `${baseTransform} translateX(${translateXL}px) rotate(${rotateL}deg) scaleX(${scaleXL}) scaleY(${scaleYL})`;
+        });
+      }, 20);
     });
   </script>
 </body>
