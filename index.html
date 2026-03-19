@@ -4,240 +4,608 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
   <title>DNRBT</title>
-
-  <link href="https://fonts.googleapis.com/css2?family=Inter&family=IBM+Plex+Sans&family=Rubik&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet" />
 
   <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #080808;
+      --fg: #f0f0f0;
+      --accent: #ff2200;
+      --dim: #333;
+      --mid: #666;
+    }
+
     html, body {
-      margin: 0; padding: 0; height: 100vh; max-height: 100vh; overflow: hidden; touch-action: none;
-      background: #000;
-      color: #fff;
-      font-family: var(--random-font, 'Inter', sans-serif);
-      box-sizing: border-box;
+      height: 100%; width: 100%; overflow: hidden;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: 'Space Mono', monospace;
       user-select: none;
+      touch-action: none;
     }
-    body {
+
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.07) 3px, rgba(0,0,0,0.07) 4px);
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* ══════════════════════════════════════
+       QR INTRO OVERLAY
+    ══════════════════════════════════════ */
+    #intro {
+      position: fixed; inset: 0;
+      background: #000;
+      z-index: 5000;
       display: flex;
-      justify-content: center;
-      align-items: center;
       flex-direction: column;
-      text-align: center;
-      padding: 20px;
-      overflow: hidden;
-      position: relative;
-      height: 100vh;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
     }
-    #warning {
-      position: fixed;
-      top: -50px;
-      width: 100%;
-      text-align: center;
-      color: #888;
-      font-weight: 600;
+    #intro.done { display: none; }
+
+    #qr-wrap {
+      position: relative;
+      width: min(72vw, 280px);
+      aspect-ratio: 1;
+    }
+    #qr-svg {
+      width: 100%; height: 100%;
+      opacity: 0;
+      transform: scale(0.85);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+    #qr-svg.visible { opacity: 1; transform: scale(1); }
+
+    #scan-beam {
+      position: absolute;
+      left: 0; right: 0;
+      top: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      box-shadow: 0 0 12px 4px rgba(255,34,0,0.6);
+      opacity: 0;
+      pointer-events: none;
+    }
+    #scan-beam.scanning {
+      opacity: 1;
+      animation: beam-scan 1.4s ease-in-out forwards;
+    }
+    @keyframes beam-scan {
+      0%   { top: 0%; opacity: 0; }
+      5%   { opacity: 1; }
+      90%  { opacity: 1; }
+      100% { top: 100%; opacity: 0; }
+    }
+
+    .qr-corner {
+      position: absolute;
+      width: 22px; height: 22px;
+      border-color: var(--accent);
+      border-style: solid;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .qr-corner.show { opacity: 1; }
+    .qr-corner.tl { top: -4px; left: -4px;  border-width: 3px 0 0 3px; }
+    .qr-corner.tr { top: -4px; right: -4px; border-width: 3px 3px 0 0; }
+    .qr-corner.bl { bottom: -4px; left: -4px;  border-width: 0 0 3px 3px; }
+    .qr-corner.br { bottom: -4px; right: -4px; border-width: 0 3px 3px 0; }
+
+    #intro-status {
+      font-size: 11px;
+      letter-spacing: 4px;
+      color: var(--mid);
+      text-transform: uppercase;
+      min-height: 18px;
+      transition: color 0.3s;
+    }
+    #intro-status.ok { color: var(--accent); }
+
+    #intro-bar-wrap {
+      width: min(72vw, 280px);
+      height: 2px;
+      background: var(--dim);
+      overflow: hidden;
+    }
+    #intro-bar {
+      height: 100%;
+      width: 0%;
+      background: var(--accent);
+      transition: width 0.05s linear;
+    }
+
+    /* ══════════════════════════════════════
+       MAIN PAGE
+    ══════════════════════════════════════ */
+    #page {
+      position: fixed; inset: 0;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      overflow: hidden;
+    }
+    #page.visible { opacity: 1; }
+
+    #topbar {
+      border-bottom: 1px solid var(--dim);
+      padding: 10px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 9px;
+      letter-spacing: 3px;
+      color: var(--mid);
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+    #topbar #click-counter { color: var(--accent); }
+
+    #main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 0 22px;
+      overflow: hidden;
+    }
+
+    #tagline {
+      font-size: 9px;
+      letter-spacing: 4px;
+      color: var(--mid);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    #dnrbt-wrap { position: relative; display: inline-block; }
+    #dnrbt-shadow {
+      position: absolute;
+      top: 5px; left: 5px;
+      font-family: 'Bebas Neue', cursive;
+      font-size: clamp(86px, 23vw, 160px);
+      line-height: 0.88;
+      letter-spacing: -1px;
+      color: var(--accent);
       pointer-events: none;
       opacity: 0;
-      user-select: none;
-      z-index: 1000;
-      transition: transform 1s ease, opacity 1s ease, font-size 0.5s ease;
-      will-change: transform, opacity, font-size;
+      transition: opacity 0.2s;
+      z-index: 0;
     }
-    h1 {
-      font-size: 60px;
-      letter-spacing: 8px;
-      font-weight: 700;
+    #dnrbt-wrap:active #dnrbt-shadow { opacity: 1; }
+
+    #dnrbt {
+      font-family: 'Bebas Neue', cursive;
+      font-size: clamp(86px, 23vw, 160px);
+      line-height: 0.88;
+      letter-spacing: -1px;
       cursor: pointer;
-      transform-origin: center;
-      white-space: nowrap;
-      user-select: none;
-      margin-bottom: 60px;
-      transition: none;
-      display: inline-block;
+      position: relative;
+      z-index: 1;
+      color: var(--fg);
+      display: block;
+      transform-origin: left center;
     }
+    #dnrbt.outline { -webkit-text-stroke: 2px var(--fg); color: transparent; }
+    #dnrbt.red { color: var(--accent); }
+    #dnrbt.inv { color: var(--bg); background: var(--fg); padding: 0 6px; }
+
+    #dnrbt.glitch { animation: glitch 0.35s steps(1) forwards; }
+    @keyframes glitch {
+      0%  { clip-path: inset(0 0 85% 0); transform: translate(-5px,0) skewX(-6deg); color: var(--accent); }
+      15% { clip-path: inset(40% 0 40% 0); transform: translate(4px,2px); color: var(--fg); }
+      30% { clip-path: inset(70% 0 10% 0); transform: translate(-3px,-1px) skewX(4deg); color: var(--accent); }
+      45% { clip-path: inset(15% 0 65% 0); transform: translate(6px,0); }
+      60% { clip-path: none; transform: translate(0) skewX(-2deg); color: var(--fg); }
+      75% { transform: translate(3px,-2px); }
+      90% { transform: translate(-2px,1px); color: var(--accent); }
+      100% { transform: translate(0); clip-path: none; color: var(--fg); }
+    }
+
     .links {
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-      width: 100%;
-      max-width: 320px;
-      align-items: center;
-      font-weight: 600;
-      font-size: 22px;
-      user-select: none;
+      margin-top: 28px;
+      border-top: 1px solid var(--fg);
+      border-bottom: 1px solid var(--fg);
     }
     .links a {
-      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--fg);
       text-decoration: none;
-      display: inline-block;
-      transition: transform 0.8s ease;
-      user-select: none;
+      font-family: 'Space Mono', monospace;
+      font-weight: 700;
+      font-size: clamp(13px, 3.8vw, 18px);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      padding: 12px 0;
+      border-bottom: 1px solid #1a1a1a;
+      position: relative;
+      overflow: hidden;
+      -webkit-tap-highlight-color: transparent;
     }
-    .links a:hover,
-    .links a:active {
-      opacity: 0.5;
+    .links a:last-child { border-bottom: none; }
+    .links a::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: var(--fg);
+      transform: translateX(-101%);
+      transition: transform 0.12s ease;
+      z-index: 0;
     }
+    .links a:active::before { transform: translateX(0); }
+    .links a:active { color: var(--bg); }
+    .links a span, .links a .arr { position: relative; z-index: 1; }
+    .links a .arr { font-size: 18px; }
+
+    #bottombar {
+      border-top: 1px solid var(--dim);
+      padding: 9px 18px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 8px;
+      letter-spacing: 3px;
+      color: var(--mid);
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+
+    #warning {
+      position: fixed;
+      top: 44px; left: 0; right: 0;
+      text-align: center;
+      color: var(--accent);
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 5px;
+      text-transform: uppercase;
+      pointer-events: none;
+      opacity: 0;
+      z-index: 200;
+      transform: translateY(-10px);
+      transition: opacity 0.4s, transform 0.4s;
+    }
+    #warning.show { opacity: 1; transform: translateY(0); }
+
+    #secret {
+      position: fixed; inset: 0;
+      background: var(--accent);
+      color: #000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 8000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      text-align: center;
+      padding: 30px;
+    }
+    #secret.show { opacity: 1; pointer-events: all; }
+    #secret .big {
+      font-family: 'Bebas Neue', cursive;
+      font-size: clamp(44px, 14vw, 90px);
+      letter-spacing: 6px;
+      line-height: 1;
+    }
+    #secret .sub {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 4px;
+      margin-top: 18px;
+      opacity: 0.6;
+    }
+    #secret .coin {
+      font-size: 52px;
+      margin-bottom: 10px;
+      animation: spin-coin 0.9s ease infinite alternate;
+    }
+    @keyframes spin-coin {
+      from { transform: rotateY(0deg) scaleX(1); }
+      to   { transform: rotateY(60deg) scaleX(0.45); }
+    }
+
+    #konami-hint {
+      position: fixed; bottom: 36px; right: 16px;
+      font-size: 7px; letter-spacing: 2px; color: #181818;
+      pointer-events: none; text-transform: uppercase;
+      transition: color 0.5s;
+    }
+
+    .flash { animation: flash 0.08s ease; }
+    @keyframes flash { 50% { filter: invert(1); } }
   </style>
 </head>
 <body>
-  <div id="warning">*NIE KLIKAJ DNRBT*</div>
 
-  <h1 id="dnrbt">DNRBT</h1>
-  <div class="links">
-    <a href="https://www.instagram.com/daniorobot_/" target="_blank" rel="noopener noreferrer">Instagram</a>
-    <a href="https://www.tiktok.com/@daniorobot2" target="_blank" rel="noopener noreferrer">TikTok #2</a>
-    <a href="https://www.tiktok.com/@daniorobot" target="_blank" rel="noopener noreferrer">TikTok #1</a>
-    <a href="https://www.youtube.com/@daniorobot" target="_blank" rel="noopener noreferrer">YouTube</a>
+<div id="intro">
+  <div id="qr-wrap">
+    <svg id="qr-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" fill="none">
+      <rect x="4" y="4" width="28" height="28" stroke="#f0f0f0" stroke-width="3" fill="none"/>
+      <rect x="9" y="9" width="18" height="18" fill="#f0f0f0"/>
+      <rect x="68" y="4" width="28" height="28" stroke="#f0f0f0" stroke-width="3" fill="none"/>
+      <rect x="73" y="9" width="18" height="18" fill="#f0f0f0"/>
+      <rect x="4" y="68" width="28" height="28" stroke="#f0f0f0" stroke-width="3" fill="none"/>
+      <rect x="9" y="73" width="18" height="18" fill="#f0f0f0"/>
+      <rect x="38" y="4" width="6" height="6" fill="#f0f0f0"/>
+      <rect x="48" y="4" width="6" height="6" fill="#f0f0f0"/>
+      <rect x="56" y="4" width="6" height="6" fill="#f0f0f0"/>
+      <rect x="38" y="12" width="6" height="6" fill="#f0f0f0"/>
+      <rect x="56" y="12" width="6" height="6" fill="#f0f0f0"/>
+      <rect x="44" y="20" width="6" height="6" fill="#f0f0f0"/>
+      <rect x="4" y="38" width="6" height="6" fill="#f0f0f0"/>
+      <rect x="12" y="38" width="6" height="6" fill="#f0f0f0"/>
+      <rect x="20" y="44" width="6" height="6" fill="#f0f0f0"/>
+      <rect x="4" y="50" width="6" height="6" fill="#f0f0f0"/>
+      <rect x="20" y="56" width="6" height="6" fill="#f0f0f0"/>
+      <rect x="4" y="60" width="6" height="6" fill="#f0f0f0"/>
+      <rect x="12" y="60" width="6" height="6" fill="#f0f0f0"/>
+      <rect x="38" y="38" width="6" height="6" fill="#f0f0f0"/>
+      <rect x="50" y="38" width="6" height="6" fill="#f0f0f0"/>
+      <rect x="62" y="38" width="6" height="6" fill="#f0f0f0"/>
+      <rect x="38" y="50" width="6" height="6" fill="#f0f0f0"/>
+      <rect x="56" y="50" width="6" height="6" fill="#f0f0f0"/>
+      <rect x="44" y="56" width="6" height="6" fill="#f0f0f0"/>
+      <rect x="62" y="44" width="6" height="6" fill="#f0f0f0"/>
+      <rect x="50" y="62" width="6" height="6" fill="#f0f0f0"/>
+      <rect x="38" y="62" width="6" height="6" fill="#f0f0f0"/>
+      <rect x="62" y="56" width="6" height="6" fill="#f0f0f0"/>
+      <rect x="68" y="38" width="6" height="6" fill="#f0f0f0"/>
+      <rect x="80" y="38" width="6" height="6" fill="#f0f0f0"/>
+      <rect x="92" y="38" width="6" height="6" fill="#f0f0f0"/>
+      <rect x="68" y="50" width="6" height="6" fill="#f0f0f0"/>
+      <rect x="86" y="50" width="6" height="6" fill="#f0f0f0"/>
+      <rect x="74" y="56" width="6" height="6" fill="#f0f0f0"/>
+      <rect x="92" y="44" width="6" height="6" fill="#f0f0f0"/>
+      <rect x="80" y="62" width="6" height="6" fill="#f0f0f0"/>
+      <rect x="68" y="62" width="6" height="6" fill="#f0f0f0"/>
+      <rect x="38" y="74" width="6" height="6" fill="#f0f0f0"/>
+      <rect x="50" y="74" width="6" height="6" fill="#f0f0f0"/>
+      <rect x="62" y="74" width="6" height="6" fill="#f0f0f0"/>
+      <rect x="38" y="86" width="6" height="6" fill="#f0f0f0"/>
+      <rect x="56" y="80" width="6" height="6" fill="#f0f0f0"/>
+      <rect x="44" y="92" width="6" height="6" fill="#f0f0f0"/>
+      <rect x="62" y="86" width="6" height="6" fill="#f0f0f0"/>
+      <rect x="50" y="92" width="6" height="6" fill="#f0f0f0"/>
+      <rect x="68" y="74" width="6" height="6" fill="#f0f0f0"/>
+      <rect x="80" y="80" width="6" height="6" fill="#f0f0f0"/>
+      <rect x="92" y="74" width="6" height="6" fill="#f0f0f0"/>
+      <rect x="80" y="92" width="6" height="6" fill="#f0f0f0"/>
+      <rect x="92" y="86" width="6" height="6" fill="#f0f0f0"/>
+      <rect x="68" y="86" width="6" height="6" fill="#f0f0f0"/>
+    </svg>
+    <div class="qr-corner tl"></div>
+    <div class="qr-corner tr"></div>
+    <div class="qr-corner bl"></div>
+    <div class="qr-corner br"></div>
+    <div id="scan-beam"></div>
+  </div>
+  <div id="intro-status">INICJALIZACJA...</div>
+  <div id="intro-bar-wrap"><div id="intro-bar"></div></div>
+</div>
+
+<div id="page">
+  <div id="topbar">
+    <span>DNRBT</span>
+    <span>× <span id="click-counter">0</span></span>
+    <span id="topbar-right">GLIWICE</span>
   </div>
 
-  <script>
-    const fonts = [
-      "'Inter', sans-serif",
-      "'IBM Plex Sans', sans-serif",
-      "'Rubik', sans-serif"
-    ];
-    const randomFont = fonts[Math.floor(Math.random() * fonts.length)];
-    document.body.style.setProperty('--random-font', randomFont);
+  <div id="warning">⚠ NIE KLIKAJ DNRBT ⚠</div>
 
-    const links = document.querySelectorAll('.links a');
-    const warning = document.getElementById('warning');
+  <div id="main">
+    <div id="tagline">DANIOROBOT / LINK HUB</div>
+    <div id="dnrbt-wrap">
+      <div id="dnrbt-shadow">DNRBT</div>
+      <h1 id="dnrbt">DNRBT</h1>
+    </div>
+    <nav class="links">
+      <a href="https://www.instagram.com/daniorobot_/" target="_blank" rel="noopener noreferrer">
+        <span>Instagram</span><span class="arr">→</span>
+      </a>
+      <a href="https://www.tiktok.com/@daniocoinlover911" target="_blank" rel="noopener noreferrer">
+        <span>TikTok Coin</span><span class="arr">→</span>
+      </a>
+      <a href="https://www.tiktok.com/@daniorobot2" target="_blank" rel="noopener noreferrer">
+        <span>TikTok #2</span><span class="arr">→</span>
+      </a>
+      <a href="https://www.tiktok.com/@daniorobot" target="_blank" rel="noopener noreferrer">
+        <span>TikTok #1</span><span class="arr">→</span>
+      </a>
+      <a href="https://www.youtube.com/@daniorobot" target="_blank" rel="noopener noreferrer">
+        <span>YouTube</span><span class="arr">→</span>
+      </a>
+    </nav>
+  </div>
 
-    function randomizeLinksBase() {
-      links.forEach(link => {
-        const rotate = (Math.random() * 20 - 10).toFixed(2);
-        const translateX = (Math.random() * 20 - 10).toFixed(2);
-        const scaleX = (Math.random() * 0.4 + 0.8).toFixed(2);
-        const scaleY = (Math.random() * 0.4 + 0.8).toFixed(2);
-        link.style.transition = 'transform 0.8s ease';
-        link.style.transform = `translateX(${translateX}px) rotate(${rotate}deg) scaleX(${scaleX}) scaleY(${scaleY})`;
-      });
-    }
+  <div id="bottombar">
+    <span id="bottom-time">--:--:--</span>
+    <span id="bottom-mode">NORMAL</span>
+    <span>DNRBT.2025</span>
+  </div>
+</div>
 
-    let currentX = 0;
-    let currentY = 0;
-    let currentRotate = 0;
-    let shakeInterval = null;
-    let mainPos = { x: 0, y: 0 };
-    let warningActive = false;
+<div id="secret">
+  <div class="coin">🪙</div>
+  <div class="big">DANIOCOIN<br>ODBLOKOWANY</div>
+  <div class="sub">KLIKNIJ ABY ZAMKNĄĆ<br>GRATULACJE OD DNRBT</div>
+</div>
 
-    window.onload = () => {
-      currentX = 0;
-      currentY = 0;
-      currentRotate = 0;
-      mainPos.x = 0;
-      mainPos.y = 0;
-      const dnrbt = document.getElementById('dnrbt');
-      dnrbt.style.transform = `translate(0px, 0px) rotate(0deg)`;
+<div id="konami-hint">↑↑↓↓←→←→BA</div>
 
-      links.forEach(link => {
-        link.style.transition = 'none';
-        link.style.transform = 'none';
-      });
+<script>
+// ═══════════ INTRO ═══════════
+const intro    = document.getElementById('intro');
+const qrSvg    = document.getElementById('qr-svg');
+const scanBeam = document.getElementById('scan-beam');
+const introSt  = document.getElementById('intro-status');
+const introBar = document.getElementById('intro-bar');
+const corners  = document.querySelectorAll('.qr-corner');
+const page     = document.getElementById('page');
 
-      const fontSize = 12 + Math.random() * 4;
-      warning.style.fontSize = `${fontSize}px`;
+const steps = [
+  { t: 0,    fn: () => qrSvg.classList.add('visible') },
+  { t: 300,  fn: () => { introSt.textContent = 'WYKRYTO KOD QR...'; corners.forEach(c => c.classList.add('show')); } },
+  { t: 700,  fn: () => { scanBeam.classList.add('scanning'); fillBar(0, 60, 1400); } },
+  { t: 900,  fn: () => { introSt.textContent = 'SKANOWANIE...'; } },
+  { t: 1800, fn: () => { introSt.textContent = 'DEKODOWANIE...'; fillBar(60, 85, 600); } },
+  { t: 2100, fn: () => { introSt.classList.add('ok'); introSt.textContent = 'LINK ZIDENTYFIKOWANY.'; fillBar(85, 100, 300); } },
+  { t: 2500, fn: () => { introSt.textContent = 'ŁADOWANIE DNRBT...'; } },
+  { t: 2900, fn: () => startPixelOut() },
+];
+steps.forEach(s => setTimeout(s.fn, s.t));
 
-      setTimeout(() => {
-        warning.style.opacity = '1';
-        warningActive = true;
-        const randomY = 100 + Math.random() * 80;
-        warning.style.transform = `translateY(${randomY}px)`;
-      }, 500);
+function fillBar(from, to, dur) {
+  const start = Date.now();
+  (function tick() {
+    const p = Math.min((Date.now() - start) / dur, 1);
+    introBar.style.width = (from + (to - from) * p) + '%';
+    if (p < 1) requestAnimationFrame(tick);
+  })();
+}
 
-      setTimeout(() => {
-        const angle = Math.random() * 2 * Math.PI;
-        const distance = 2000;
-        const translateX = Math.cos(angle) * distance;
-        const translateY = Math.sin(angle) * distance;
+function startPixelOut() {
+  const pixOut = document.createElement('div');
+  const cols = 10, rows = 17;
+  pixOut.style.cssText = `position:fixed;inset:0;z-index:6000;display:grid;grid-template-columns:repeat(${cols},1fr);grid-template-rows:repeat(${rows},1fr);pointer-events:none;`;
+  document.body.appendChild(pixOut);
 
-        warning.style.transition = 'transform 1.5s ease, opacity 1.5s ease, font-size 1.5s ease';
-        warning.style.opacity = '0';
-        warning.style.transform = `translate(${translateX}px, ${translateY}px)`;
-        warningActive = false;
-      }, 4000);
+  const cells = [];
+  for (let i = 0; i < cols * rows; i++) {
+    const c = document.createElement('div');
+    c.style.cssText = 'background:#080808;opacity:0;transition:opacity 0.22s ease;';
+    pixOut.appendChild(c);
+    cells.push(c);
+  }
 
-      setTimeout(() => {
-        warning.style.display = 'none';
-      }, 6000);
-    };
+  page.classList.add('visible');
 
-    const dnrbt = document.getElementById('dnrbt');
+  const order = [...Array(cells.length).keys()].sort(() => Math.random() - 0.5);
+  order.forEach((idx, i) => setTimeout(() => { cells[idx].style.opacity = '1'; }, i * 9));
 
-    dnrbt.addEventListener('click', () => {
-      if (shakeInterval) return;
+  setTimeout(() => {
+    intro.classList.add('done');
+    pixOut.style.cssText += 'opacity:0;transition:opacity 0.3s ease;';
+    setTimeout(() => pixOut.remove(), 400);
+    showWarning();
+    startClock();
+  }, cells.length * 9 + 280);
+}
 
-      const dnrbtRect = dnrbt.getBoundingClientRect();
-      const intensityX = Math.random() * 25 + 10;
-      const intensityY = Math.random() * 25 + 10;
-      const intensityRotate = Math.random() * 15 + 5;
+// ═══════════ MAIN ═══════════
+function showWarning() {
+  const w = document.getElementById('warning');
+  w.classList.add('show');
+  setTimeout(() => w.classList.remove('show'), 3200);
+}
 
-      if (navigator.vibrate) {
-        const vibrationDuration = Math.min(500, Math.max(intensityX, intensityY, intensityRotate) * 20);
-        navigator.vibrate(vibrationDuration);
-      }
+function startClock() {
+  const el = document.getElementById('bottom-time');
+  setInterval(() => {
+    el.textContent = new Date().toLocaleTimeString('pl-PL');
+  }, 1000);
+}
 
-      if (warningActive) {
-        let warningInterval = setInterval(() => {
-          const scaleX = 1 + (Math.random() * 5);
-          const scaleY = 1 + (Math.random() * 5);
-          const rotate = (Math.random() * 360 - 180);
-          const translateX = (Math.random() * window.innerWidth - window.innerWidth/2);
-          const translateY = (Math.random() * window.innerHeight - window.innerHeight/2);
-          warning.style.transition = 'transform 0.2s ease';
-          warning.style.transform = `translate(${translateX}px, ${translateY}px) scaleX(${scaleX}) scaleY(${scaleY}) rotate(${rotate}deg)`;
-        }, 100);
+const dnrbt   = document.getElementById('dnrbt');
+const counter = document.getElementById('click-counter');
+const modeEl  = document.getElementById('bottom-mode');
+const tagline = document.getElementById('tagline');
+const secret  = document.getElementById('secret');
 
-        setTimeout(() => {
-          clearInterval(warningInterval);
-          warning.style.transition = 'transform 1s ease';
-          const randomY = 100 + Math.random() * 80;
-          warning.style.transform = `translateY(${randomY}px)`;
-        }, 3000);
-      }
+let clicks = 0, posX = 0, posY = 0, rot = 0, shaking = false;
 
-      const duration = 800;
-      const startTime = Date.now();
+const MODES    = ['NORMAL','CHAOS','OUTLINE','INVERTED','RED','ULTRA'];
+const TAGLINES = [
+  'DANIOROBOT / LINK HUB',
+  'NAPRAWA. MAGNESY. CHAOS.',
+  'DANIOCOIN PRZYJDZIE.',
+  'DALEJ KLIKASZ??',
+  'DOBRZE. NIE ZATRZYMUJ SIĘ.',
+  'WYBRAŃCZE DNRBT.',
+];
 
-      dnrbt.style.transition = 'none';
+dnrbt.addEventListener('click', () => {
+  clicks++;
+  counter.textContent = clicks;
+  const mi = Math.min(clicks - 1, MODES.length - 1);
+  modeEl.textContent = MODES[mi];
+  tagline.textContent = TAGLINES[mi];
 
-      const moveDirX = (Math.random() * 2 - 1) * 1;
-      const moveDirY = (Math.random() * 2 - 1) * 1;
-      const rotateDir = (Math.random() * 2 - 1) * 0.3;
+  dnrbt.classList.remove('outline','red','inv');
+  if (mi === 2) dnrbt.classList.add('outline');
+  else if (mi === 3) dnrbt.classList.add('inv');
+  else if (mi === 4) dnrbt.classList.add('red');
+  else if (mi === 5) dnrbt.classList.add('red','outline');
 
-      shakeInterval = setInterval(() => {
-        const elapsed = Date.now() - startTime;
-        if (elapsed >= duration) {
-          clearInterval(shakeInterval);
-          shakeInterval = null;
-          dnrbt.style.transition = 'none';
-          dnrbt.style.transform = `translate(${currentX}px, ${currentY}px) rotate(${currentRotate}deg)`;
-          randomizeLinksBase();
-          return;
+  dnrbt.classList.remove('glitch');
+  void dnrbt.offsetWidth;
+  dnrbt.classList.add('glitch');
+  dnrbt.addEventListener('animationend', () => dnrbt.classList.remove('glitch'), { once: true });
+
+  if (navigator.vibrate) navigator.vibrate(Math.min(clicks * 25, 400));
+  if (clicks >= 4) { document.body.classList.add('flash'); setTimeout(() => document.body.classList.remove('flash'), 100); }
+  if (clicks === 10) setTimeout(() => secret.classList.add('show'), 400);
+
+  if (shaking) return;
+  shaking = true;
+  const intensity = Math.min(clicks * 5 + 8, 55);
+  const duration  = Math.min(250 + clicks * 70, 1100);
+  const dX = (Math.random()*2-1)*1.5, dY = (Math.random()*2-1)*1.5, dR = (Math.random()*2-1)*0.4;
+  const t0 = Date.now();
+  (function frame() {
+    if (Date.now() - t0 >= duration) { shaking = false; dnrbt.style.transform = `translate(${posX}px,${posY}px) rotate(${rot}deg)`; return; }
+    posX += dX; posY += dY; rot += dR;
+    const ox = (Math.random()*2-1)*intensity*0.35, oy = (Math.random()*2-1)*intensity*0.35, or_ = (Math.random()*2-1)*intensity*0.08;
+    dnrbt.style.transform = `translate(${posX+ox}px,${posY+oy}px) rotate(${rot+or_}deg)`;
+    requestAnimationFrame(frame);
+  })();
+});
+
+secret.addEventListener('click', () => secret.classList.remove('show'));
+
+let lpTimer = null;
+dnrbt.addEventListener('pointerdown', () => {
+  lpTimer = setTimeout(() => {
+    tagline.textContent = 'TRZYMASZ. DOBRZE. NIE PUSZCZAJ.';
+    dnrbt.style.transition = 'transform 1.8s ease';
+    dnrbt.style.transform = `translate(${posX}px,${posY}px) scale(1.35) rotate(${(Math.random()*2-1)*18}deg)`;
+  }, 750);
+});
+dnrbt.addEventListener('pointerup', () => { clearTimeout(lpTimer); dnrbt.style.transition = 'none'; });
+dnrbt.addEventListener('pointercancel', () => clearTimeout(lpTimer));
+
+const KONAMI = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+let ki = 0;
+const kHint = document.getElementById('konami-hint');
+document.addEventListener('keydown', e => {
+  if (e.key === KONAMI[ki]) {
+    ki++;
+    kHint.style.color = `hsl(${ki*36},100%,60%)`;
+    if (ki === KONAMI.length) {
+      ki = 0;
+      modeEl.textContent = 'KONAMI!!!';
+      tagline.textContent = 'DANIOCOIN × KONAMI = CHAOS';
+      let kf = 0;
+      const kiv = setInterval(() => {
+        dnrbt.style.transform = `translate(${(Math.random()*2-1)*35}px,${(Math.random()*2-1)*20}px) rotate(${(Math.random()*2-1)*18}deg) skewX(${(Math.random()*2-1)*8}deg)`;
+        if (++kf > 70) {
+          clearInterval(kiv);
+          dnrbt.style.transform = '';
+          modeEl.textContent = MODES[Math.min(clicks-1, MODES.length-1)];
+          kHint.style.color = '#181818';
         }
-
-        const offsetX = (Math.random() * 2 - 1) * intensityX * 0.3;
-        const offsetY = (Math.random() * 2 - 1) * intensityY * 0.3;
-        const offsetRotate = (Math.random() * 2 - 1) * intensityRotate * 0.3;
-
-        currentX += moveDirX;
-        currentY += moveDirY;
-        currentRotate += rotateDir;
-
-        currentX = Math.min(Math.max(currentX, -dnrbtRect.left), window.innerWidth - dnrbtRect.right);
-        currentY = Math.min(Math.max(currentY, -dnrbtRect.top), window.innerHeight - dnrbtRect.bottom);
-
-        dnrbt.style.transform = `translate(${currentX + offsetX}px, ${currentY + offsetY}px) rotate(${currentRotate + offsetRotate}deg)`;
-
-        links.forEach(link => {
-          const baseTransform = link.style.transform;
-          const rotateL = (Math.random() * 20 - 10) * 0.2;
-          const translateXL = (Math.random() * 20 - 10) * 0.2;
-          const scaleXL = 1 + (Math.random() * 0.1 - 0.05);
-          const scaleYL = 1 + (Math.random() * 0.1 - 0.05);
-
-          link.style.transition = 'none';
-          link.style.transform = `${baseTransform} translateX(${translateXL}px) rotate(${rotateL}deg) scaleX(${scaleXL}) scaleY(${scaleYL})`;
-        });
-      }, 20);
-    });
-  </script>
+      }, 40);
+      if (navigator.vibrate) navigator.vibrate([80,40,80,40,250]);
+    }
+  } else { ki = 0; kHint.style.color = '#181818'; }
+});
+</script>
 </body>
 </html>
